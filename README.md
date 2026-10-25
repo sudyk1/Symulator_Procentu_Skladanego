@@ -4,6 +4,9 @@ Investment calculator with regular contributions: contribution periods, own or h
 (S&P 500, MSCI World and WIG indices, SPY and IWDA ETFs), side-by-side comparison of two assets
 and inflation-adjusted results. The interface is available in English and Polish.
 
+Results can be shown in PLN, EUR, USD or GBP. Historical returns are converted into the selected currency
+at historical exchange rates (`src/domain/currency.ts`), and real results use that currency's inflation.
+
 Live site: https://sudyk1.github.io/Symulator_Procentu_Skladanego/
 
 ## Getting started

@@ -1,3 +1,5 @@
+import type { Currency } from '../data/currencies';
+
 export type Language = 'en' | 'pl';
 
 export const LANGUAGES: { code: Language; label: string; locale: string }[] = [
@@ -5,21 +7,32 @@ export const LANGUAGES: { code: Language; label: string; locale: string }[] = [
   { code: 'pl', label: 'Polski', locale: 'pl-PL' },
 ];
 
+/** English plural of "year". */
+const enYears = (n: number) => `${n} ${n === 1 ? 'year' : 'years'}`;
+
 const en = {
   appTitle: 'ETF Investment Simulator',
   appSubtitle: 'Compound interest with regular contributions. Monthly compounding.',
   languageSwitcher: 'Language',
 
   settings: {
-    initialAmount: 'Initial amount (PLN)',
+    currency: 'Currency',
+    initialAmount: (symbol: string) => `Initial amount (${symbol})`,
     frequency: 'Contribution frequency',
     monthly: 'Monthly',
     yearly: 'Yearly',
   },
 
+  currencies: {
+    PLN: 'Polish złoty (PLN)',
+    EUR: 'Euro (EUR)',
+    USD: 'US dollar (USD)',
+    GBP: 'British pound (GBP)',
+  } as Record<Currency, string>,
+
   contribution: {
-    month: 'Contribution / month (PLN)',
-    year: 'Contribution / year (PLN)',
+    month: (symbol: string) => `Contribution / month (${symbol})`,
+    year: (symbol: string) => `Contribution / year (${symbol})`,
   },
 
   returns: {
@@ -37,11 +50,13 @@ const en = {
     note: (currency: string, inflationName: string, from: number, to: number) =>
       `Returns with dividends in ${currency}, ${inflationName}. Annual data ${from}–${to}, approximate.`,
     noteEtf: 'ETF results are already net of fund costs.',
-    noteFx: 'USD/PLN exchange rate changes are ignored.',
+    noteConverted: (from: string, to: string) =>
+      `Returns converted from ${from} to ${to} at historical exchange rates (December averages), `
+      + 'so currency gains and losses are included.',
     noteExtended: (periodYears: number, remaining: number) =>
-      `Contribution periods cover ${periodYears} years – the last period's contribution continues for the remaining ${remaining} years.`,
+      `Contribution periods cover ${enYears(periodYears)} – the last period's contribution continues for the remaining ${enYears(remaining)}.`,
     noteTruncated: (periodYears: number, years: number) =>
-      `Contribution periods cover ${periodYears} years – the simulation ends after ${years} years.`,
+      `Contribution periods cover ${enYears(periodYears)} – the simulation ends after ${enYears(years)}.`,
     noteNoComparison: 'No other data covers this range of years.',
   },
 
@@ -62,14 +77,18 @@ const en = {
   },
 
   stats: {
+    title: 'Result',
+    totalPaid: 'You paid in',
+    totalPaidNote: (years: number) => `initial amount + contributions over ${enYears(years)}`,
     finalValue: 'Final value',
-    totalPaid: 'Total contributions (incl. initial)',
+    finalValueNote: 'what the portfolio is worth at the end',
     profit: 'Profit',
-    averageReturn: 'Average annual return (CAGR of rates)',
-    realValue: 'Value after inflation',
-    realProfit: 'Real profit',
+    profitNote: (percent: string) => `${percent} on what you paid in`,
+    averageReturn: 'Average annual return',
+    realValue: 'Final value after inflation',
+    realProfit: 'Profit after inflation',
     realHint: '“After inflation” amounts are in prices from the start of the investment. '
-      + 'Real profit is the value after inflation minus contributions converted to starting prices.',
+      + 'Profit after inflation is the value after inflation minus contributions converted to starting prices.',
   },
 
   comparison: {
@@ -115,10 +134,20 @@ const en = {
   inflation: {
     'us-cpi': 'US inflation',
     'pl-cpi': 'Polish inflation',
+    'ea-cpi': 'euro area inflation',
+    'uk-cpi': 'UK inflation',
   } as Record<string, string>,
 };
 
 export type Messages = typeof en;
+
+/** Polish plural of "year": 1 rok, 2–4 lata (but 12–14 lat), otherwise lat. */
+function plYears(n: number): string {
+  if (n === 1) return '1 rok';
+  const lastDigit = n % 10;
+  const lastTwo = n % 100;
+  return `${n} ${lastDigit >= 2 && lastDigit <= 4 && (lastTwo < 12 || lastTwo > 14) ? 'lata' : 'lat'}`;
+}
 
 const pl: Messages = {
   appTitle: 'Symulator inwestycji ETF',
@@ -126,15 +155,23 @@ const pl: Messages = {
   languageSwitcher: 'Język',
 
   settings: {
-    initialAmount: 'Kwota startowa (zł)',
+    currency: 'Waluta',
+    initialAmount: symbol => `Kwota startowa (${symbol})`,
     frequency: 'Częstotliwość wpłat',
     monthly: 'Co miesiąc',
     yearly: 'Co rok',
   },
 
+  currencies: {
+    PLN: 'Złoty polski (PLN)',
+    EUR: 'Euro (EUR)',
+    USD: 'Dolar amerykański (USD)',
+    GBP: 'Funt brytyjski (GBP)',
+  },
+
   contribution: {
-    month: 'Wpłata / mies. (zł)',
-    year: 'Wpłata / rok (zł)',
+    month: symbol => `Wpłata / mies. (${symbol})`,
+    year: symbol => `Wpłata / rok (${symbol})`,
   },
 
   returns: {
@@ -144,7 +181,7 @@ const pl: Messages = {
     inflation: 'Inflacja roczna (%)',
     asset: 'Indeks lub ETF',
     years: 'Liczba lat',
-    yearsOption: (years, isFullRange) => `${years} lat${isFullRange ? ' (cały zakres)' : ''}`,
+    yearsOption: (years, isFullRange) => `${plYears(years)}${isFullRange ? ' (cały zakres)' : ''}`,
     firstYear: 'Pierwszy rok',
     compareWith: 'Porównaj z',
     noComparison: '— bez porównania —',
@@ -152,11 +189,13 @@ const pl: Messages = {
     note: (currency, inflationName, from, to) =>
       `Zwroty z dywidendami w ${currency}, ${inflationName}. Dane roczne ${from}–${to}, przybliżone.`,
     noteEtf: 'Wyniki ETF są już pomniejszone o koszty funduszu.',
-    noteFx: 'Pomijamy zmiany kursu USD/PLN.',
+    noteConverted: (from, to) =>
+      `Zwroty przeliczone z ${from} na ${to} po historycznych kursach (średnie z grudnia), `
+      + 'więc uwzględniają zyski i straty na walucie.',
     noteExtended: (periodYears, remaining) =>
-      `Okresy wpłat obejmują ${periodYears} lat – przez pozostałe ${remaining} lat działa wpłata z ostatniego okresu.`,
+      `Okresy wpłat obejmują ${plYears(periodYears)} – przez pozostałe ${plYears(remaining)} działa wpłata z ostatniego okresu.`,
     noteTruncated: (periodYears, years) =>
-      `Okresy wpłat obejmują ${periodYears} lat – symulacja kończy się po ${years} latach.`,
+      `Okresy wpłat obejmują ${plYears(periodYears)} – symulacja kończy się po ${years} latach.`,
     noteNoComparison: 'Dla tego zakresu lat nie ma innych danych do porównania.',
   },
 
@@ -176,14 +215,18 @@ const pl: Messages = {
   },
 
   stats: {
+    title: 'Wynik',
+    totalPaid: 'Wpłacono',
+    totalPaidNote: years => `kwota startowa + wpłaty przez ${plYears(years)}`,
     finalValue: 'Wartość końcowa',
-    totalPaid: 'Suma wpłat (ze startem)',
+    finalValueNote: 'tyle jest wart portfel na koniec',
     profit: 'Zysk',
-    averageReturn: 'Średni zwrot roczny (CAGR stóp)',
-    realValue: 'Wartość po inflacji',
-    realProfit: 'Zysk realny',
+    profitNote: percent => `${percent} w stosunku do wpłat`,
+    averageReturn: 'Średni zwrot roczny',
+    realValue: 'Wartość końcowa po inflacji',
+    realProfit: 'Zysk po inflacji',
     realHint: 'Kwoty „po inflacji” są w cenach z początku inwestycji. '
-      + 'Zysk realny to wartość po inflacji minus wpłaty przeliczone na ceny z początku.',
+      + 'Zysk po inflacji to wartość po inflacji minus wpłaty przeliczone na ceny z początku.',
   },
 
   comparison: {
@@ -227,6 +270,8 @@ const pl: Messages = {
   inflation: {
     'us-cpi': 'inflacja w USA',
     'pl-cpi': 'inflacja w Polsce',
+    'ea-cpi': 'inflacja w strefie euro',
+    'uk-cpi': 'inflacja w Wielkiej Brytanii',
   },
 };
 

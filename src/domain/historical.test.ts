@@ -1,31 +1,24 @@
 import { describe, expect, it } from 'vitest';
 import { findAsset, MARKET_ASSETS } from '../data/assets';
-import { lastYear } from '../data/series';
+import { CURRENCIES } from '../data/currencies';
 import { MESSAGES } from '../i18n/messages';
+import { marketDataFor } from './currency';
 import { availableLengths, availableRange, availableStartYears, coversWindow } from './historical';
 import { buildHistoricalPlan } from './plan';
 import { averageReturn } from './simulate';
 
-describe('historical data', () => {
-  it.each(MARKET_ASSETS.map(asset => [asset.returns.id, asset] as const))(
-    '%s: returns and inflation end in the same year',
-    (_, asset) => {
-      expect(lastYear(asset.returns)).toBe(lastYear(asset.inflation));
-      expect(asset.inflation.firstYear).toBeLessThanOrEqual(asset.returns.firstYear);
-    },
-  );
+const inUsd = (id: string) => marketDataFor(findAsset(id), 'USD');
+const inPln = (id: string) => marketDataFor(findAsset(id), 'PLN');
 
-  it.each(Object.entries(MESSAGES))('every series has a display name in "%s"', (_, messages) => {
-    for (const asset of MARKET_ASSETS) {
-      expect(messages.series[asset.returns.id]).toBeTruthy();
-      expect(messages.inflation[asset.inflation.id]).toBeTruthy();
-    }
+describe('historical data', () => {
+  it.each(Object.entries(MESSAGES))('every asset and inflation series has a display name in "%s"', (_, messages) => {
+    for (const asset of MARKET_ASSETS) expect(messages.series[asset.returns.id]).toBeTruthy();
+    for (const currency of CURRENCIES) expect(messages.inflation[currency.inflation.id]).toBeTruthy();
   });
 
-  it('S&P 500 1986–2025 averages about 11.5% a year', () => {
-    const sp500 = findAsset('sp500');
-    expect(availableRange(sp500)).toEqual([1986, 2025]);
-    expect(averageReturn(sp500.returns.values)).toBeCloseTo(11.47, 1);
+  it('S&P 500 1986–2025 averages about 11.5% a year in dollars', () => {
+    expect(availableRange(inUsd('sp500'))).toEqual([1986, 2025]);
+    expect(averageReturn(findAsset('sp500').returns.values)).toBeCloseTo(11.47, 1);
   });
 
   it('an S&P 500 ETF (SPY) earns slightly less than the index – the fund\'s costs', () => {
@@ -40,32 +33,33 @@ describe('historical data', () => {
 
 describe('window selection', () => {
   it('WIG has data from 1995, so instead of 40 years the full range is 31 years', () => {
-    expect(availableLengths(findAsset('wig'))).toEqual([10, 20, 30, 31]);
+    expect(availableLengths(inPln('wig'))).toEqual([10, 20, 30, 31]);
   });
 
-  it('S&P 500 has a full 40 years', () => {
-    expect(availableLengths(findAsset('sp500'))).toEqual([10, 20, 30, 40]);
+  it('S&P 500 has a full 40 years in dollars, but 31 in złoty (Polish data starts in 1995)', () => {
+    expect(availableLengths(inUsd('sp500'))).toEqual([10, 20, 30, 40]);
+    expect(availableLengths(inPln('sp500'))).toEqual([10, 20, 30, 31]);
   });
 
   it('IWDA, listed since 2010, offers 10 years or the full 16-year range', () => {
-    expect(availableLengths(findAsset('iwda'))).toEqual([10, 16]);
+    expect(availableLengths(inPln('iwda'))).toEqual([10, 16]);
   });
 
   it('coversWindow checks that the data spans the whole window', () => {
-    expect(coversWindow(findAsset('iwda'), 2010, 16)).toBe(true);
-    expect(coversWindow(findAsset('iwda'), 2006, 20)).toBe(false);
-    expect(coversWindow(findAsset('spy'), 1994, 32)).toBe(true);
+    expect(coversWindow(inPln('iwda'), 2010, 16)).toBe(true);
+    expect(coversWindow(inPln('iwda'), 2006, 20)).toBe(false);
+    expect(coversWindow(inUsd('spy'), 1994, 32)).toBe(true);
   });
 
   it('lists start years newest first, all within the data', () => {
-    const sp500 = findAsset('sp500');
-    const starts = availableStartYears(sp500, 30);
+    const data = inUsd('sp500');
+    const starts = availableStartYears(data, 30);
     expect(starts[0]).toBe(1996);
     expect(starts.at(-1)).toBe(1986);
     for (const firstYear of starts) {
       expect(() => buildHistoricalPlan(
         [{ id: 1, years: 30, contribution: 0, rate: 0 }],
-        { returns: sp500.returns, inflation: sp500.inflation, firstYear, years: 30 },
+        { ...data, firstYear, years: 30 },
       )).not.toThrow();
     }
   });
