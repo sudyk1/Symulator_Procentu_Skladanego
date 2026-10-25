@@ -1,40 +1,48 @@
-# Symulator procentu składanego (ETF)
+# Compound Interest Simulator (ETF)
 
-Kalkulator inwestycji z regularnymi wpłatami: okresy wpłat, własne lub historyczne stopy zwrotu
-(S&P 500, MSCI World, WIG) i wynik skorygowany o inflację.
+Investment calculator with regular contributions: contribution periods, own or historical rates of return
+(S&P 500, MSCI World and WIG indices, SPY and IWDA ETFs), side-by-side comparison of two assets
+and inflation-adjusted results. The interface is available in English and Polish.
 
-Strona: https://sudyk1.github.io/Symulator_Procentu_Skladanego/
+Live site: https://sudyk1.github.io/Symulator_Procentu_Skladanego/
 
-## Uruchomienie
+## Getting started
 
-Wymaga Node.js 24.
+Requires Node.js 24.
 
 ```bash
 npm install
-npm run dev        # serwer deweloperski na http://localhost:5173
-npm test           # testy obliczeń (Vitest)
-npm run build      # wersja produkcyjna w dist/
+npm run dev        # dev server on http://localhost:5173
+npm test           # unit tests (Vitest)
+npm run build      # production build in dist/
 ```
 
-## Struktura
+## Project structure
 
 ```
 src/
-  domain/        logika obliczeń, bez Reacta – tu są testy
-    simulate.ts    symulacja miesiąc po miesiącu, wartości realne, podsumowanie
-    plan.ts        rozwijanie okresów na lata (tryb własny i historyczny)
-    historical.ts  dostępne zakresy lat dla indeksów
+  domain/        calculation logic, no React – this is where the tests live
+    simulate.ts    month-by-month simulation, real (inflation-adjusted) values, summary
+    plan.ts        expanding periods into years (own and historical mode)
+    historical.ts  available year ranges for each asset
     types.ts
-  data/          roczne stopy zwrotu indeksów i inflacja, ze źródłami
-  components/    komponenty widoku (React)
-  lib/           formatowanie kwot, kolory motywu
-  App.tsx        stan aplikacji i składanie komponentów
+  data/          annual returns of indices and ETFs, inflation, with sources
+  i18n/          translations (messages.ts) and the language provider
+  components/    UI components (React)
+  lib/           number formatting, theme colours
+  App.tsx        application state and composition
 ```
 
-Nowe obliczenia dodawaj w `src/domain/` razem z testem, a w komponentach tylko je wyświetlaj.
+Guidelines:
 
-## Gałęzie i wdrożenie
+- Put new calculations in `src/domain/` together with a test; components only display results.
+- All code, comments, commit messages and tests are in English.
+- User-facing text goes into `src/i18n/messages.ts` – add every key in both `en` and `pl`
+  (TypeScript reports a missing translation).
 
-- `feature/*` → PR do `develop` (gałąź domyślna)
-- `develop` → PR do `main` (chroniona, produkcja)
-- Push do `main` uruchamia workflow, który testuje, buduje i publikuje stronę na GitHub Pages.
+## Branches and deployment
+
+- `feature/*` → pull request into `develop` (default branch)
+- `develop` → pull request into `main` (protected, production)
+- CI (`Test and build`) runs on every pull request and must pass before merging into `main`.
+- A push to `main` runs the Pages workflow, which tests, builds and publishes the site.

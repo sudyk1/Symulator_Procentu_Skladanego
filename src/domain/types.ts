@@ -1,45 +1,45 @@
-/** Jak często dokonywana jest wpłata. */
+/** How often a contribution is made. */
 export type ContributionFrequency = 'month' | 'year';
 
-/** Skąd biorą się roczne stopy zwrotu. */
+/** Where the annual rates of return come from. */
 export type ReturnsMode = 'own' | 'historical';
 
-/** Okres: kilka kolejnych lat z tą samą wpłatą i (w trybie własnym) tym samym zwrotem. */
+/** A period: consecutive years with the same contribution and (in own mode) the same return. */
 export interface Period {
   id: number;
   years: number;
-  /** Wpłata w zł – miesięczna albo roczna, zależnie od częstotliwości. */
+  /** Contribution in PLN – monthly or yearly depending on the frequency. */
   contribution: number;
-  /** Roczna stopa zwrotu w %. Używana tylko w trybie własnym. */
+  /** Annual rate of return in %. Used only in own mode. */
   rate: number;
 }
 
-/** Nadpisane stopy zwrotu pojedynczych lat: indeks roku (od 0) → stopa w %. */
+/** Overridden returns of single years: year index (from 0) → rate in %. */
 export type RateOverrides = Record<number, number>;
 
-/** Ustawienia jednego roku symulacji, gotowe do przeliczenia. */
+/** Settings of one simulated year, ready to be computed. */
 export interface YearPlan {
-  /** Indeks okresu, z którego pochodzi wpłata. */
+  /** Index of the period the contribution comes from. */
   periodIndex: number;
   contribution: number;
-  /** Roczna stopa zwrotu w %. */
+  /** Annual rate of return in %. */
   rate: number;
-  /** Roczna inflacja w %. */
+  /** Annual inflation in %. */
   inflation: number;
-  /** Rok kalendarzowy – tylko w trybie historycznym. */
+  /** Calendar year – historical mode only. */
   calendarYear?: number;
   overridden: boolean;
 }
 
-/** Wynik jednego roku symulacji. Kwoty nominalne w zł. */
+/** Result of one simulated year. Nominal amounts in PLN. */
 export interface YearResult {
   paidInYear: number;
   gainInYear: number;
   totalPaid: number;
   value: number;
-  /** Wartość portfela w cenach z początku inwestycji. */
+  /** Portfolio value in prices from the start of the investment. */
   realValue: number;
-  /** Suma wpłat przeliczona na ceny z początku inwestycji. */
+  /** Total contributions converted to prices from the start of the investment. */
   realPaid: number;
 }
 
@@ -52,7 +52,7 @@ export interface Summary {
   finalValue: number;
   totalPaid: number;
   profit: number;
-  /** Średnia geometryczna rocznych stóp zwrotu w %. */
+  /** Geometric mean of annual rates of return, in %. */
   averageReturn: number;
   realValue: number;
   realProfit: number;

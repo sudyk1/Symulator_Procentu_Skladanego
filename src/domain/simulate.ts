@@ -1,15 +1,15 @@
 import type { SimulationSettings, Summary, YearPlan, YearResult } from './types';
 
-/** Stopa miesięczna, która po 12 miesiącach daje podaną stopę roczną (w %). */
+/** Monthly rate that compounds to the given annual rate (in %) over 12 months. */
 export function monthlyRate(annualPercent: number): number {
   return Math.pow(1 + annualPercent / 100, 1 / 12) - 1;
 }
 
 /**
- * Symuluje portfel miesiąc po miesiącu.
+ * Simulates the portfolio month by month.
  *
- * Wpłata trafia na początku miesiąca (albo roku), potem portfel rośnie o stopę miesięczną.
- * Równolegle liczony jest skumulowany wskaźnik cen, żeby podać wartości realne.
+ * The contribution is added at the start of the month (or year), then the portfolio grows
+ * by the monthly rate. A cumulative price level is tracked alongside to report real values.
  */
 export function simulate(plan: YearPlan[], settings: SimulationSettings): YearResult[] {
   const monthly = settings.frequency === 'month';
@@ -49,7 +49,7 @@ export function simulate(plan: YearPlan[], settings: SimulationSettings): YearRe
   });
 }
 
-/** Średnia geometryczna rocznych stóp zwrotu w %. */
+/** Geometric mean of annual rates of return, in %. */
 export function averageReturn(rates: number[]): number {
   if (rates.length === 0) return 0;
   const growth = rates.reduce((acc, rate) => acc * (1 + rate / 100), 1);

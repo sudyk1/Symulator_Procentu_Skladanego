@@ -1,4 +1,4 @@
-name: Wdrożenie na GitHub Pages
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -28,13 +28,13 @@ jobs:
           node-version: 24
           cache: npm
 
-      - name: Instalacja zależności
+      - name: Install dependencies
         run: npm ci
 
-      - name: Testy
+      - name: Run tests
         run: npm test
 
-      - name: Budowanie
+      - name: Build
         run: npm run build
 
       - uses: actions/configure-pages@v5

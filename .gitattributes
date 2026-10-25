@@ -1,7 +1,7 @@
-# Wszystkie pliki tekstowe z końcami linii LF, niezależnie od systemu
+# All text files use LF line endings, regardless of the operating system
 * text=auto eol=lf
 
-# Pliki binarne bez konwersji
+# Binary files are never converted
 *.png binary
 *.jpg binary
 *.ico binary

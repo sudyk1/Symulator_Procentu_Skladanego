@@ -1,34 +1,34 @@
-# Zależności i wyniki budowania (odtwarzane przez npm ci / npm run build)
+# Dependencies and build output (recreated by npm ci / npm run build)
 node_modules/
 dist/
 dist-ssr/
 *.tsbuildinfo
 
-# Testy
+# Tests
 coverage/
 
-# Logi
+# Logs
 *.log
 npm-debug.log*
 
-# Zmienne środowiskowe – nigdy nie commitujemy sekretów, przykład trzymamy w .env.example
+# Environment variables – never commit secrets; keep an example in .env.example
 .env
 .env.*
 !.env.example
 
-# Edytory: wspólne ustawienia VS Code można commitować, reszta jest osobista
+# Editors: shared VS Code settings may be committed, everything else is personal
 .vscode/*
 !.vscode/extensions.json
 !.vscode/settings.json
 .idea/
 *.swp
 
-# Pliki systemowe
+# OS files
 .DS_Store
 Thumbs.db
 Desktop.ini
 
-# Claude Code: wspólne ustawienia projektu (.claude/settings.json) zostają w repo,
-# lokalne ustawienia i konfiguracja podglądu zależą od komputera
+# Claude Code: shared project settings (.claude/settings.json) stay in the repo,
+# local settings and the preview config depend on the machine
 .claude/settings.local.json
 .claude/launch.json

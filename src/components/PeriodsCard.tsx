@@ -1,11 +1,13 @@
 import { MAX_YEARS, periodRanges } from '../domain/plan';
 import type { Period, ReturnsMode } from '../domain/types';
+import { useI18n } from '../i18n/I18nProvider';
 import { NumberInput } from './NumberInput';
 
 interface Props {
   periods: Period[];
   mode: ReturnsMode;
   contributionLabel: string;
+  randomSpread: number;
   onChange: (id: number, changes: Partial<Period>) => void;
   onAdd: () => void;
   onRemove: (id: number) => void;
@@ -14,27 +16,24 @@ interface Props {
 }
 
 export function PeriodsCard({
-  periods, mode, contributionLabel, onChange, onAdd, onRemove, onRandomize, onClearOverrides,
+  periods, mode, contributionLabel, randomSpread, onChange, onAdd, onRemove, onRandomize, onClearOverrides,
 }: Props) {
+  const { t } = useI18n();
   const ranges = periodRanges(periods);
   const historical = mode === 'historical';
 
   return (
     <section className="card">
-      <h2>Okresy wpłat</h2>
-      <p className="hint">
-        {historical
-          ? 'W trybie historycznym okresy ustalają tylko wpłaty. Zwrot i inflacja każdego roku pochodzą z danych indeksu.'
-          : 'Każdy okres to kilka kolejnych lat z tą samą wpłatą i zwrotem. Łączna liczba lat to suma okresów.'}
-      </p>
+      <h2>{t.periods.title}</h2>
+      <p className="hint">{historical ? t.periods.hintHistorical : t.periods.hintOwn}</p>
       <div className="table-wrap">
         <table>
           <thead>
             <tr>
-              <th>Lata</th>
-              <th>Liczba lat</th>
+              <th>{t.periods.years}</th>
+              <th>{t.periods.yearCount}</th>
               <th>{contributionLabel}</th>
-              <th>Zwrot roczny (%)</th>
+              <th>{t.periods.rate}</th>
               <th />
             </tr>
           </thead>
@@ -57,14 +56,14 @@ export function PeriodsCard({
                 <td>
                   <NumberInput
                     step={0.1} value={period.rate} disabled={historical}
-                    title={historical ? 'W trybie historycznym zwrot pochodzi z danych indeksu' : undefined}
+                    title={historical ? t.periods.rateFromData : undefined}
                     onChange={rate => onChange(period.id, { rate })}
                   />
                 </td>
                 <td>
                   <button
-                    className="icon" title="Usuń okres" disabled={periods.length === 1}
-                    onClick={() => onRemove(period.id)}
+                    className="icon" title={t.periods.remove} aria-label={t.periods.remove}
+                    disabled={periods.length === 1} onClick={() => onRemove(period.id)}
                   >
                     ✕
                   </button>
@@ -75,11 +74,11 @@ export function PeriodsCard({
         </table>
       </div>
       <div className="actions">
-        <button onClick={onAdd}>+ Dodaj okres</button>
+        <button onClick={onAdd}>{t.periods.add}</button>
         {!historical && (
           <>
-            <button className="ghost" onClick={onRandomize}>Losowe lata (zmienność ±15%)</button>
-            <button className="ghost" onClick={onClearOverrides}>Wyczyść zmiany pojedynczych lat</button>
+            <button className="ghost" onClick={onRandomize}>{t.periods.randomize(randomSpread)}</button>
+            <button className="ghost" onClick={onClearOverrides}>{t.periods.clearOverrides}</button>
           </>
         )}
       </div>

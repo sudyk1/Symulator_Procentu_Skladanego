@@ -1,10 +1,11 @@
-import { MARKET_INDICES, type MarketIndex } from '../data/indices';
+import { MARKET_ASSETS, type MarketAsset } from '../data/assets';
 import { availableLengths, availableRange, availableStartYears } from '../domain/historical';
 import type { ReturnsMode } from '../domain/types';
+import { useI18n } from '../i18n/I18nProvider';
 import { NumberInput } from './NumberInput';
 
 export interface HistoricalChoice {
-  indexId: string;
+  assetId: string;
   years: number;
   firstYear: number;
 }
@@ -13,32 +14,37 @@ interface Props {
   mode: ReturnsMode;
   ownInflation: number;
   historical: HistoricalChoice;
-  marketIndex: MarketIndex;
-  /** Łączna liczba lat w okresach wpłat – do podpowiedzi o przedłużaniu lub ucinaniu. */
+  asset: MarketAsset;
+  /** Indices and ETFs that have data for the whole selected range of years. */
+  compareCandidates: MarketAsset[];
+  compareId: string | null;
+  /** Total years covered by contribution periods – used to explain extension or truncation. */
   periodYears: number;
   onModeChange: (mode: ReturnsMode) => void;
   onOwnInflationChange: (inflation: number) => void;
   onHistoricalChange: (choice: HistoricalChoice) => void;
+  onCompareChange: (id: string | null) => void;
 }
 
 export function ReturnsCard(props: Props) {
   const { mode, ownInflation, onModeChange, onOwnInflationChange } = props;
+  const { t } = useI18n();
   return (
     <section className="card">
-      <h2>Zwroty</h2>
+      <h2>{t.returns.title}</h2>
       <div className="segmented" role="group">
         <button className={mode === 'own' ? 'on' : ''} onClick={() => onModeChange('own')}>
-          Własne założenia
+          {t.returns.modeOwn}
         </button>
         <button className={mode === 'historical' ? 'on' : ''} onClick={() => onModeChange('historical')}>
-          Historyczne wyniki giełd
+          {t.returns.modeHistorical}
         </button>
       </div>
 
       {mode === 'own' ? (
         <div className="grid">
           <label>
-            Inflacja roczna (%)
+            {t.returns.inflation}
             <NumberInput step={0.1} value={ownInflation} onChange={onOwnInflationChange} />
           </label>
         </div>
@@ -49,50 +55,78 @@ export function ReturnsCard(props: Props) {
   );
 }
 
-function HistoricalPicker({ historical, marketIndex, periodYears, onHistoricalChange }: Props) {
-  const lengths = availableLengths(marketIndex);
-  const maxLength = lengths.at(-1);
-  const startYears = availableStartYears(marketIndex, historical.years);
-  const [from, to] = availableRange(marketIndex);
+/** Options grouped into indices and ETFs. */
+function AssetOptions({ assets }: { assets: MarketAsset[] }) {
+  const { t } = useI18n();
+  return (
+    <>
+      {(['index', 'etf'] as const).map(kind => {
+        const group = assets.filter(asset => asset.kind === kind);
+        if (group.length === 0) return null;
+        return (
+          <optgroup key={kind} label={t.returns.groups[kind]}>
+            {group.map(asset => {
+              const [first, last] = availableRange(asset);
+              return (
+                <option key={asset.returns.id} value={asset.returns.id}>
+                  {t.series[asset.returns.id]}, {first}–{last}
+                </option>
+              );
+            })}
+          </optgroup>
+        );
+      })}
+    </>
+  );
+}
 
-  // Przy zmianie indeksu lub długości zachowujemy wybór, jeśli nadal jest możliwy
-  const changeIndex = (indexId: string) => {
-    const index = MARKET_INDICES.find(i => i.returns.id === indexId)!;
-    const indexLengths = availableLengths(index);
-    const years = indexLengths.includes(historical.years) ? historical.years : indexLengths[0];
-    onHistoricalChange({ indexId, years, firstYear: keepStart(index, years, historical.firstYear) });
+function HistoricalPicker({
+  historical, asset, compareCandidates, compareId, periodYears, onHistoricalChange, onCompareChange,
+}: Props) {
+  const { t } = useI18n();
+  const lengths = availableLengths(asset);
+  const maxLength = lengths.at(-1);
+  const startYears = availableStartYears(asset, historical.years);
+  const [from, to] = availableRange(asset);
+
+  // When the asset or length changes, keep the current selection if it is still possible
+  const changeAsset = (assetId: string) => {
+    const next = MARKET_ASSETS.find(a => a.returns.id === assetId)!;
+    const nextLengths = availableLengths(next);
+    const years = nextLengths.includes(historical.years) ? historical.years : nextLengths.at(-1)!;
+    onHistoricalChange({ assetId, years, firstYear: keepStart(next, years, historical.firstYear) });
   };
   const changeYears = (years: number) =>
-    onHistoricalChange({ ...historical, years, firstYear: keepStart(marketIndex, years, historical.firstYear) });
+    onHistoricalChange({ ...historical, years, firstYear: keepStart(asset, years, historical.firstYear) });
+
+  const notes = [
+    t.returns.note(asset.currency, t.inflation[asset.inflation.id], from, to),
+    asset.kind === 'etf' && t.returns.noteEtf,
+    asset.currency !== 'PLN' && t.returns.noteFx,
+    periodYears < historical.years && t.returns.noteExtended(periodYears, historical.years - periodYears),
+    periodYears > historical.years && t.returns.noteTruncated(periodYears, historical.years),
+    compareCandidates.length === 0 && t.returns.noteNoComparison,
+  ];
 
   return (
     <>
       <div className="grid">
         <label>
-          Indeks
-          <select value={historical.indexId} onChange={e => changeIndex(e.target.value)}>
-            {MARKET_INDICES.map(index => {
-              const [first, last] = availableRange(index);
-              return (
-                <option key={index.returns.id} value={index.returns.id}>
-                  {index.returns.name}, {first}–{last}
-                </option>
-              );
-            })}
+          {t.returns.asset}
+          <select value={historical.assetId} onChange={e => changeAsset(e.target.value)}>
+            <AssetOptions assets={MARKET_ASSETS} />
           </select>
         </label>
         <label>
-          Liczba lat
+          {t.returns.years}
           <select value={historical.years} onChange={e => changeYears(Number(e.target.value))}>
             {lengths.map(length => (
-              <option key={length} value={length}>
-                {length} lat{length === maxLength ? ' (cały zakres)' : ''}
-              </option>
+              <option key={length} value={length}>{t.returns.yearsOption(length, length === maxLength)}</option>
             ))}
           </select>
         </label>
         <label>
-          Pierwszy rok
+          {t.returns.firstYear}
           <select
             value={historical.firstYear}
             onChange={e => onHistoricalChange({ ...historical, firstYear: Number(e.target.value) })}
@@ -102,21 +136,20 @@ function HistoricalPicker({ historical, marketIndex, periodYears, onHistoricalCh
             ))}
           </select>
         </label>
+        <label>
+          {t.returns.compareWith}
+          <select value={compareId ?? ''} onChange={e => onCompareChange(e.target.value || null)}>
+            <option value="">{t.returns.noComparison}</option>
+            <AssetOptions assets={compareCandidates} />
+          </select>
+        </label>
       </div>
-      <p className="hint spaced">
-        Zwroty z dywidendami w {marketIndex.currency}, {marketIndex.inflation.name}. Dane roczne {from}–{to},
-        przybliżone.
-        {marketIndex.currency !== 'PLN' && ' Pomijamy zmiany kursu USD/PLN.'}
-        {periodYears < historical.years &&
-          ` Okresy wpłat obejmują ${periodYears} lat – przez pozostałe ${historical.years - periodYears} lat działa wpłata z ostatniego okresu.`}
-        {periodYears > historical.years &&
-          ` Okresy wpłat obejmują ${periodYears} lat – symulacja kończy się po ${historical.years} latach.`}
-      </p>
+      <p className="hint spaced">{notes.filter(Boolean).join(' ')}</p>
     </>
   );
 }
 
-function keepStart(index: MarketIndex, years: number, firstYear: number): number {
-  const starts = availableStartYears(index, years);
+function keepStart(asset: MarketAsset, years: number, firstYear: number): number {
+  const starts = availableStartYears(asset, years);
   return starts.includes(firstYear) ? firstYear : starts[0];
 }

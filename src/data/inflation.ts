@@ -1,10 +1,9 @@
 import type { HistoricalSeries } from './series';
 
-/** Inflacja w USA: CPI-U, grudzień do grudnia, w %. */
+/** US inflation: CPI-U, December over December, in %. */
 export const usInflation: HistoricalSeries = {
   id: 'us-cpi',
-  name: 'inflacja w USA',
-  source: 'BLS, CPI-U grudzień/grudzień',
+  source: 'BLS, CPI-U December/December',
   firstYear: 1986,
   values: [
     1.1, 4.4, 4.4, 4.6, 6.1, 3.1, 2.9, 2.7, 2.7, 2.5, // 1986–1995
@@ -14,11 +13,10 @@ export const usInflation: HistoricalSeries = {
   ],
 };
 
-/** Inflacja w Polsce: CPI średnioroczna, w %. */
+/** Polish inflation: CPI annual average, in %. */
 export const plInflation: HistoricalSeries = {
   id: 'pl-cpi',
-  name: 'inflacja w Polsce',
-  source: 'GUS, CPI średnioroczna',
+  source: 'Statistics Poland (GUS), CPI annual average',
   firstYear: 1995,
   values: [
     27.8, 19.9, 14.9, 11.8, 7.3, 10.1, 5.5, 1.9, 0.8, 3.5, // 1995–2004
