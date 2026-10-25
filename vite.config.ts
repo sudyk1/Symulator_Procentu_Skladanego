@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 export default defineConfig({
   plugins: [react()],
-  // Względne ścieżki, żeby strona działała pod /Symulator_Procentu_Skladanego/ na GitHub Pages
+  // Relative asset paths, so the site works under /Symulator_Procentu_Skladanego/ on GitHub Pages
   base: './',
   test: {
     include: ['src/**/*.test.ts'],

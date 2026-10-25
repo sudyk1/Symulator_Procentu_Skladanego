@@ -1,21 +1,23 @@
 import type { Summary } from '../domain/types';
-import { formatPercent, formatPLN, signClass } from '../lib/format';
+import { useI18n } from '../i18n/I18nProvider';
+import { signClass } from '../lib/format';
 
 export function StatsBar({ summary }: { summary: Summary }) {
+  const { t, format } = useI18n();
   return (
     <>
       <section className="stats">
-        <Stat label="Wartość końcowa" value={formatPLN(summary.finalValue)} />
-        <Stat label="Suma wpłat (ze startem)" value={formatPLN(summary.totalPaid)} />
-        <Stat label="Zysk" value={formatPLN(summary.profit)} className={signClass(summary.profit)} />
-        <Stat label="Średni zwrot roczny (CAGR stóp)" value={formatPercent(summary.averageReturn)} />
-        <Stat label="Wartość po inflacji" value={formatPLN(summary.realValue)} real />
-        <Stat label="Zysk realny" value={formatPLN(summary.realProfit)} className={signClass(summary.realProfit)} real />
+        <Stat label={t.stats.finalValue} value={format.currency(summary.finalValue)} />
+        <Stat label={t.stats.totalPaid} value={format.currency(summary.totalPaid)} />
+        <Stat label={t.stats.profit} value={format.currency(summary.profit)} className={signClass(summary.profit)} />
+        <Stat label={t.stats.averageReturn} value={format.percent(summary.averageReturn)} />
+        <Stat label={t.stats.realValue} value={format.currency(summary.realValue)} real />
+        <Stat
+          label={t.stats.realProfit} value={format.currency(summary.realProfit)}
+          className={signClass(summary.realProfit)} real
+        />
       </section>
-      <p className="hint spaced">
-        Kwoty „po inflacji” są w cenach z początku inwestycji. Zysk realny to wartość po inflacji minus wpłaty
-        przeliczone na ceny z początku.
-      </p>
+      <p className="hint spaced">{t.stats.realHint}</p>
     </>
   );
 }
