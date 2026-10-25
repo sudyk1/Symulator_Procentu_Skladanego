@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Symulator ETF</title>
+<style>
+  :root {
+    --bg: #f6f7f9; --card: #fff; --text: #1d2330; --muted: #6b7280;
+    --border: #e2e5ea; --accent: #2563eb; --gain: #16a34a; --loss: #dc2626;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #111418; --card: #1a1f26; --text: #e6e8eb; --muted: #9aa3ae;
+            --border: #2c333d; --accent: #60a5fa; --gain: #4ade80; --loss: #f87171; }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: system-ui, sans-serif; background: var(--bg); color: var(--text); }
+  main { max-width: 960px; margin: 0 auto; padding: 24px 16px 48px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  p.sub { color: var(--muted); margin: 0 0 20px; }
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 16px; margin-bottom: 16px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); }
+  input, select { font: inherit; padding: 8px 10px; border: 1px solid var(--border); border-radius: 6px;
+                  background: var(--bg); color: var(--text); width: 100%; }
+  button { font: inherit; padding: 8px 14px; border-radius: 6px; border: 1px solid var(--accent);
+           background: var(--accent); color: #fff; cursor: pointer; }
+  button.ghost { background: transparent; color: var(--accent); }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
+  .stat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
+  .stat .k { font-size: .8rem; color: var(--muted); }
+  .stat .v { font-size: 1.35rem; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+  .gain { color: var(--gain); } .loss { color: var(--loss); }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }
+  th, td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 500; font-size: .8rem; }
+  td input { width: 110px; padding: 4px 6px; text-align: right; }
+  canvas { width: 100%; height: 280px; display: block; }
+  .legend { display: flex; gap: 16px; font-size: .8rem; color: var(--muted); margin-top: 8px; }
+  .legend span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+                         margin-right: 6px; background: var(--c); }
+</style>
+</head>
+<body>
+<main>
+  <h1>Symulator inwestycji ETF</h1>
+  <p class="sub">Procent składany z regularnymi wpłatami. Kapitalizacja miesięczna.</p>
+
+  <section class="card">
+    <div class="grid">
+      <label>Kwota startowa (zł)
+        <input id="start" type="number" min="0" step="100" value="10000">
+      </label>
+      <label>Liczba lat
+        <input id="years" type="number" min="1" max="100" step="1" value="20">
+      </label>
+      <label>Częstotliwość wpłat
+        <select id="freq">
+          <option value="month">Co miesiąc</option>
+          <option value="year">Co rok</option>
+        </select>
+      </label>
+      <label>Domyślna wpłata (zł)
+        <input id="defContrib" type="number" min="0" step="50" value="500">
+      </label>
+      <label>Domyślny zwrot roczny (%)
+        <input id="defRate" type="number" step="0.1" value="7">
+      </label>
+    </div>
+    <div class="actions">
+      <button id="applyAll">Zastosuj domyślne do wszystkich lat</button>
+      <button id="randomize" class="ghost">Losowe lata (zmienność ±15%)</button>
+    </div>
+  </section>
+
+  <section class="stats">
+    <div class="stat"><div class="k">Wartość końcowa</div><div class="v" id="sFinal">–</div></div>
+    <div class="stat"><div class="k">Suma wpłat (ze startem)</div><div class="v" id="sPaid">–</div></div>
+    <div class="stat"><div class="k">Zysk</div><div class="v" id="sProfit">–</div></div>
+    <div class="stat"><div class="k">Średni zwrot roczny (CAGR stóp)</div><div class="v" id="sCagr">–</div></div>
+  </section>
+
+  <section class="card" style="margin-top:16px">
+    <canvas id="chart"></canvas>
+    <div class="legend">
+      <span style="--c: var(--muted)">Wpłacony kapitał</span>
+      <span style="--c: var(--accent)">Wartość portfela</span>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Rok</th>
+            <th id="contribHead">Wpłata / mies. (zł)</th>
+            <th>Zwrot (%)</th>
+            <th>Wpłaty w roku</th>
+            <th>Zysk w roku</th>
+            <th>Suma wpłat</th>
+            <th>Wartość na koniec</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+  </section>
+</main>
+
+<script>
+  const $ = id => document.getElementById(id);
+  const fmt = n => n.toLocaleString('pl-PL', { style: 'currency', currency: 'PLN', maximumFractionDigits: 0 });
+  const pct = n => (n >= 0 ? '+' : '') + n.toFixed(2) + '%';
+
+  // Ustawienia per rok: { contrib, rate }
+  let plan = [];
+
+  function syncPlanLength() {
+    const n = Math.max(1, Math.min(100, parseInt($('years').value) || 1));
+    const c = +$('defContrib').value || 0, r = +$('defRate').value || 0;
+    while (plan.length < n) plan.push({ contrib: c, rate: r });
+    plan.length = n;
+  }
+
+  function simulate() {
+    const monthly = $('freq').value === 'month';
+    let value = +$('start').value || 0;
+    let paid = value;
+    const out = [];
+    for (const { contrib, rate } of plan) {
+      const m = Math.pow(1 + rate / 100, 1 / 12) - 1; // stopa miesięczna równoważna rocznej
+      const startValue = value;
+      let paidYear = 0;
+      if (!monthly) { value += contrib; paidYear += contrib; }
+      for (let i = 0; i < 12; i++) {
+        if (monthly) { value += contrib; paidYear += contrib; }
+        value *= 1 + m;
+      }
+      paid += paidYear;
+      out.push({ paidYear, gain: value - startValue - paidYear, paid, value });
+    }
+    return out;
+  }
+
+  function renderTable(res) {
+    $('contribHead').textContent = $('freq').value === 'month' ? 'Wpłata / mies. (zł)' : 'Wpłata / rok (zł)';
+    $('rows').innerHTML = plan.map((p, i) => {
+      const r = res[i];
+      return `<tr>
+        <td>${i + 1}</td>
+        <td><input type="number" min="0" step="50" data-i="${i}" data-k="contrib" value="${p.contrib}"></td>
+        <td><input type="number" step="0.1" data-i="${i}" data-k="rate" value="${p.rate}"></td>
+        <td>${fmt(r.paidYear)}</td>
+        <td class="${r.gain >= 0 ? 'gain' : 'loss'}">${fmt(r.gain)}</td>
+        <td>${fmt(r.paid)}</td>
+        <td><strong>${fmt(r.value)}</strong></td>
+      </tr>`;
+    }).join('');
+  }
+
+  function renderStats(res) {
+    const last = res[res.length - 1];
+    const profit = last.value - last.paid;
+    const cagr = (Math.pow(plan.reduce((a, p) => a * (1 + p.rate / 100), 1), 1 / plan.length) - 1) * 100;
+    $('sFinal').textContent = fmt(last.value);
+    $('sPaid').textContent = fmt(last.paid);
+    $('sProfit').textContent = fmt(profit);
+    $('sProfit').className = 'v ' + (profit >= 0 ? 'gain' : 'loss');
+    $('sCagr').textContent = pct(cagr);
+  }
+
+  function renderChart(res) {
+    const cv = $('chart'), dpr = window.devicePixelRatio || 1;
+    const W = cv.clientWidth, H = cv.clientHeight;
+    cv.width = W * dpr; cv.height = H * dpr;
+    const ctx = cv.getContext('2d');
+    ctx.scale(dpr, dpr);
+    const css = getComputedStyle(document.documentElement);
+    const col = v => css.getPropertyValue(v).trim();
+
+    const pad = { l: 70, r: 12, t: 10, b: 24 };
+    const start = +$('start').value || 0;
+    const values = [start, ...res.map(r => r.value)];
+    const paid = [start, ...res.map(r => r.paid)];
+    const max = Math.max(...values, ...paid, 1);
+    const x = i => pad.l + (W - pad.l - pad.r) * i / (values.length - 1);
+    const y = v => pad.t + (H - pad.t - pad.b) * (1 - v / max);
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.font = '11px system-ui, sans-serif';
+    ctx.fillStyle = col('--muted');
+    ctx.strokeStyle = col('--border');
+    ctx.lineWidth = 1;
+    for (let g = 0; g <= 4; g++) {
+      const v = max * g / 4, yy = y(v);
+      ctx.beginPath(); ctx.moveTo(pad.l, yy); ctx.lineTo(W - pad.r, yy); ctx.stroke();
+      ctx.textAlign = 'right';
+      ctx.fillText(fmt(v), pad.l - 6, yy + 4);
+    }
+    ctx.textAlign = 'center';
+    const step = Math.ceil((values.length - 1) / 10);
+    for (let i = 0; i < values.length; i += step) ctx.fillText(i, x(i), H - 6);
+
+    const area = (arr, color, alpha) => {
+      ctx.beginPath();
+      arr.forEach((v, i) => i ? ctx.lineTo(x(i), y(v)) : ctx.moveTo(x(i), y(v)));
+      ctx.strokeStyle = color; ctx.lineWidth = 2; ctx.stroke();
+      ctx.lineTo(x(arr.length - 1), y(0)); ctx.lineTo(x(0), y(0)); ctx.closePath();
+      ctx.globalAlpha = alpha; ctx.fillStyle = color; ctx.fill(); ctx.globalAlpha = 1;
+    };
+    area(values, col('--accent'), 0.15);
+    area(paid, col('--muted'), 0.2);
+  }
+
+  function update(rebuildTable = true) {
+    syncPlanLength();
+    const res = simulate();
+    if (rebuildTable) renderTable(res); else refreshTableValues(res);
+    renderStats(res);
+    renderChart(res);
+  }
+
+  // Odświeża tylko obliczone komórki, żeby nie gubić fokusu w edytowanym polu
+  function refreshTableValues(res) {
+    [...$('rows').children].forEach((tr, i) => {
+      const r = res[i], td = tr.children;
+      td[3].textContent = fmt(r.paidYear);
+      td[4].textContent = fmt(r.gain);
+      td[4].className = r.gain >= 0 ? 'gain' : 'loss';
+      td[5].textContent = fmt(r.paid);
+      td[6].innerHTML = `<strong>${fmt(r.value)}</strong>`;
+    });
+  }
+
+  $('rows').addEventListener('input', e => {
+    const { i, k } = e.target.dataset;
+    if (i === undefined) return;
+    plan[i][k] = +e.target.value || 0;
+    update(false);
+  });
+
+  ['start', 'years', 'freq'].forEach(id => $(id).addEventListener('input', () => update()));
+
+  $('applyAll').addEventListener('click', () => {
+    const c = +$('defContrib').value || 0, r = +$('defRate').value || 0;
+    plan.forEach(p => { p.contrib = c; p.rate = r; });
+    update();
+  });
+
+  $('randomize').addEventListener('click', () => {
+    const base = +$('defRate').value || 0;
+    plan.forEach(p => { p.rate = Math.round((base + (Math.random() * 2 - 1) * 15) * 10) / 10; });
+    update();
+  });
+
+  window.addEventListener('resize', () => renderChart(simulate()));
+  update();
+</script>
+</body>
+</html>
