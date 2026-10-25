@@ -1,14 +1,13 @@
-import { plInflation, usInflation } from './inflation';
+import type { Currency } from './currencies';
 import type { HistoricalSeries } from './series';
 
 /** Something you can invest in: a stock market index or an ETF tracking one. */
 export interface MarketAsset {
   /** Index: theoretical returns without costs. ETF: real fund results, net of fees and tracking error. */
   kind: 'index' | 'etf';
+  /** Returns in the asset's own currency; converted to the investor's currency in `domain/currency.ts`. */
   returns: HistoricalSeries;
-  currency: 'USD' | 'PLN';
-  /** Inflation of the country whose currency the asset is quoted in. */
-  inflation: HistoricalSeries;
+  currency: Currency;
 }
 
 // Annual total returns (dividends reinvested), in %, in the asset's currency.
@@ -76,11 +75,11 @@ const iwda: HistoricalSeries = {
 };
 
 export const MARKET_ASSETS: MarketAsset[] = [
-  { kind: 'index', returns: sp500, currency: 'USD', inflation: usInflation },
-  { kind: 'index', returns: msciWorld, currency: 'USD', inflation: usInflation },
-  { kind: 'index', returns: wig, currency: 'PLN', inflation: plInflation },
-  { kind: 'etf', returns: spy, currency: 'USD', inflation: usInflation },
-  { kind: 'etf', returns: iwda, currency: 'USD', inflation: usInflation },
+  { kind: 'index', returns: sp500, currency: 'USD' },
+  { kind: 'index', returns: msciWorld, currency: 'USD' },
+  { kind: 'index', returns: wig, currency: 'PLN' },
+  { kind: 'etf', returns: spy, currency: 'USD' },
+  { kind: 'etf', returns: iwda, currency: 'USD' },
 ];
 
 export function findAsset(id: string): MarketAsset {

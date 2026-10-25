@@ -1,47 +1,68 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { DEFAULT_CURRENCY, type Currency } from '../data/currencies';
 import { createFormatters, type Formatters } from '../lib/format';
 import { LANGUAGES, MESSAGES, type Language, type Messages } from './messages';
 
-const STORAGE_KEY = 'language';
+const LANGUAGE_KEY = 'language';
+const CURRENCY_KEY = 'currency';
 
 interface I18nContextValue {
   language: Language;
   setLanguage: (language: Language) => void;
+  currency: Currency;
+  setCurrency: (currency: Currency) => void;
   t: Messages;
   format: Formatters;
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
 
-/** Saved choice first, then the browser language; English is the fallback. */
-function initialLanguage(): Language {
+function readStored<T extends string>(key: string, allowed: readonly T[]): T | null {
   try {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved === 'en' || saved === 'pl') return saved;
+    const saved = localStorage.getItem(key);
+    return allowed.includes(saved as T) ? (saved as T) : null;
   } catch {
-    // Storage can be unavailable (private mode, blocked cookies) – fall through to detection.
+    return null; // Storage can be unavailable (private mode, blocked cookies)
   }
-  return navigator.language.toLowerCase().startsWith('pl') ? 'pl' : 'en';
 }
 
+function store(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    // Not critical: the choice just won't survive a reload.
+  }
+}
+
+/** Saved choice first, then the browser language; English is the fallback. */
+function initialLanguage(): Language {
+  return readStored(LANGUAGE_KEY, ['en', 'pl'] as const)
+    ?? (navigator.language.toLowerCase().startsWith('pl') ? 'pl' : 'en');
+}
+
+/** Language and currency of the interface, with formatters that follow both. */
 export function I18nProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>(initialLanguage);
+  const [currency, setCurrency] = useState<Currency>(
+    () => readStored(CURRENCY_KEY, ['PLN', 'EUR', 'USD', 'GBP'] as const) ?? DEFAULT_CURRENCY,
+  );
 
   useEffect(() => {
-    const t = MESSAGES[language];
     document.documentElement.lang = language;
-    document.title = t.appTitle;
-    try {
-      localStorage.setItem(STORAGE_KEY, language);
-    } catch {
-      // Not critical: the choice just won't survive a reload.
-    }
+    document.title = MESSAGES[language].appTitle;
+    store(LANGUAGE_KEY, language);
   }, [language]);
+
+  useEffect(() => store(CURRENCY_KEY, currency), [currency]);
 
   const value = useMemo(() => {
     const locale = LANGUAGES.find(l => l.code === language)!.locale;
-    return { language, setLanguage, t: MESSAGES[language], format: createFormatters(locale) };
-  }, [language]);
+    return {
+      language, setLanguage, currency, setCurrency,
+      t: MESSAGES[language],
+      format: createFormatters(locale, currency),
+    };
+  }, [language, currency]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
 }

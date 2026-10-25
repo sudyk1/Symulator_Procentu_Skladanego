@@ -25,3 +25,29 @@ export const plInflation: HistoricalSeries = {
     3.6,                                                   // 2025
   ],
 };
+
+/** Euro area inflation: consumer prices, annual average, in %. */
+export const euroInflation: HistoricalSeries = {
+  id: 'ea-cpi',
+  source: 'World Bank via FRED (FPCPITOTLZGEMU), consumer prices annual %',
+  firstYear: 1986,
+  values: [
+    2.7, 3.2, 2.7, 4.1, 4.5, 4.3, 5.6, 4.6, 4.7, 4.2, // 1986–1995
+    3.1, 2.3, 2.4, 2.1, 3.0, 2.9, 2.5, 2.1, 2.2, 2.6, // 1996–2005
+    2.8, 2.5, 4.2, 0.5, 1.5, 3.3, 2.6, 1.2, 0.2, -0.1, // 2006–2015
+    0.1, 1.4, 1.7, 1.4, 0.2, 2.5, 8.5, 5.9, 2.3, 2.5, // 2016–2025
+  ],
+};
+
+/** UK inflation: consumer prices, annual average, in %. */
+export const ukInflation: HistoricalSeries = {
+  id: 'uk-cpi',
+  source: 'World Bank via FRED (FPCPITOTLZGGBR), consumer prices annual %',
+  firstYear: 1986,
+  values: [
+    3.4, 4.1, 4.2, 5.8, 8.1, 7.5, 4.6, 2.6, 2.2, 2.7, // 1986–1995
+    2.9, 2.2, 1.8, 1.8, 1.2, 1.5, 1.5, 1.4, 1.4, 2.1, // 1996–2005
+    2.5, 2.4, 3.5, 2.0, 2.5, 3.9, 2.6, 2.3, 1.5, 0.4, // 2006–2015
+    1.0, 2.6, 2.3, 1.7, 1.0, 2.5, 7.9, 6.8, 3.3, 3.9, // 2016–2025
+  ],
+};

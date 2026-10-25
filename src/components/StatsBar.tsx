@@ -2,38 +2,76 @@ import type { Summary } from '../domain/types';
 import { useI18n } from '../i18n/I18nProvider';
 import { signClass } from '../lib/format';
 
-export function StatsBar({ summary }: { summary: Summary }) {
+interface Props {
+  summary: Summary;
+  years: number;
+}
+
+/**
+ * The result at a glance: what was paid in, what it is worth and the profit – large,
+ * with the secondary figures (average return, after-inflation values) below in smaller type.
+ */
+export function StatsBar({ summary, years }: Props) {
   const { t, format } = useI18n();
+  const profitPercent = summary.totalPaid > 0 ? (summary.profit / summary.totalPaid) * 100 : 0;
+
   return (
-    <>
-      <section className="stats">
-        <Stat label={t.stats.finalValue} value={format.currency(summary.finalValue)} />
-        <Stat label={t.stats.totalPaid} value={format.currency(summary.totalPaid)} />
-        <Stat label={t.stats.profit} value={format.currency(summary.profit)} className={signClass(summary.profit)} />
-        <Stat label={t.stats.averageReturn} value={format.percent(summary.averageReturn)} />
-        <Stat label={t.stats.realValue} value={format.currency(summary.realValue)} real />
-        <Stat
-          label={t.stats.realProfit} value={format.currency(summary.realProfit)}
-          className={signClass(summary.realProfit)} real
+    <section className="card result" aria-labelledby="result-title">
+      <h2 id="result-title">{t.stats.title}</h2>
+
+      <div className="result-main">
+        <KeyFigure
+          label={t.stats.totalPaid}
+          value={format.currency(summary.totalPaid)}
+          note={t.stats.totalPaidNote(years)}
         />
-      </section>
-      <p className="hint spaced">{t.stats.realHint}</p>
-    </>
+        <KeyFigure
+          label={t.stats.finalValue}
+          value={format.currency(summary.finalValue)}
+          note={t.stats.finalValueNote}
+          emphasis
+        />
+        <KeyFigure
+          label={t.stats.profit}
+          value={format.currency(summary.profit)}
+          note={t.stats.profitNote(format.percent(profitPercent))}
+          className={signClass(summary.profit)}
+        />
+      </div>
+
+      <dl className="result-secondary">
+        <div>
+          <dt>{t.stats.averageReturn}</dt>
+          <dd>{format.percent(summary.averageReturn)}</dd>
+        </div>
+        <div className="real">
+          <dt>{t.stats.realValue}</dt>
+          <dd>{format.currency(summary.realValue)}</dd>
+        </div>
+        <div className="real">
+          <dt>{t.stats.realProfit}</dt>
+          <dd className={signClass(summary.realProfit)}>{format.currency(summary.realProfit)}</dd>
+        </div>
+      </dl>
+      <p className="hint">{t.stats.realHint}</p>
+    </section>
   );
 }
 
-interface StatProps {
+interface KeyFigureProps {
   label: string;
   value: string;
+  note: string;
   className?: string;
-  real?: boolean;
+  emphasis?: boolean;
 }
 
-function Stat({ label, value, className = '', real = false }: StatProps) {
+function KeyFigure({ label, value, note, className = '', emphasis = false }: KeyFigureProps) {
   return (
-    <div className={`stat${real ? ' real' : ''}`}>
-      <div className="stat-label">{label}</div>
-      <div className={`stat-value ${className}`}>{value}</div>
+    <div className={`key-figure${emphasis ? ' emphasis' : ''}`}>
+      <div className="key-figure-label">{label}</div>
+      <div className={`key-figure-value ${className}`}>{value}</div>
+      <div className="key-figure-note">{note}</div>
     </div>
   );
 }
