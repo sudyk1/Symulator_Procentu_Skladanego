@@ -6,13 +6,13 @@ interface Props extends Omit<InputHTMLAttributes<HTMLInputElement>, 'value' | 'o
 }
 
 /**
- * Pole liczbowe, które pozwala chwilowo wpisać „-” albo zostawić puste pole
- * bez zamiany na 0 w trakcie pisania. Do rodzica trafiają tylko poprawne liczby.
+ * Number field that lets the user temporarily type "-" or clear the field
+ * without it snapping to 0 mid-typing. Only valid numbers reach the parent.
  */
 export function NumberInput({ value, onChange, ...rest }: Props) {
   const [text, setText] = useState(String(value));
 
-  // Wartość zmieniona z zewnątrz (np. przyciskiem) nadpisuje to, co jest w polu
+  // A value changed from outside (e.g. by a button) replaces what is in the field
   useEffect(() => {
     setText(current => (Number(current) === value && current !== '' ? current : String(value)));
   }, [value]);

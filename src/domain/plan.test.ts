@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { findIndex } from '../data/indices';
+import { findAsset } from '../data/assets';
 import {
   buildHistoricalPlan, buildOwnPlan, periodIndexForYear, periodRanges, pruneOverrides, randomOverrides,
 } from './plan';
@@ -10,12 +10,12 @@ const periods: Period[] = [
   { id: 2, years: 2, contribution: 2000, rate: 5 },
 ];
 
-describe('okresy', () => {
-  it('zakresy lat są ciągłe i numerowane od 1', () => {
+describe('periods', () => {
+  it('have contiguous year ranges numbered from 1', () => {
     expect(periodRanges(periods)).toEqual([[1, 3], [4, 5]]);
   });
 
-  it('lata po końcu okresów należą do ostatniego okresu', () => {
+  it('assign years past the end to the last period', () => {
     expect(periodIndexForYear(periods, 2)).toBe(0);
     expect(periodIndexForYear(periods, 3)).toBe(1);
     expect(periodIndexForYear(periods, 10)).toBe(1);
@@ -23,7 +23,7 @@ describe('okresy', () => {
 });
 
 describe('buildOwnPlan', () => {
-  it('rozwija okresy na lata i stosuje nadpisania', () => {
+  it('expands periods into years and applies overrides', () => {
     const plan = buildOwnPlan(periods, { 1: -30 }, 3);
     expect(plan.map(y => y.contribution)).toEqual([500, 500, 500, 2000, 2000]);
     expect(plan.map(y => y.rate)).toEqual([7, -30, 7, 5, 5]);
@@ -33,9 +33,9 @@ describe('buildOwnPlan', () => {
 });
 
 describe('buildHistoricalPlan', () => {
-  const sp500 = findIndex('sp500');
+  const sp500 = findAsset('sp500');
 
-  it('bierze zwroty i inflację z danych dla kolejnych lat kalendarzowych', () => {
+  it('takes returns and inflation from the data for consecutive calendar years', () => {
     const plan = buildHistoricalPlan(periods, {
       returns: sp500.returns, inflation: sp500.inflation, firstYear: 2008, years: 2,
     });
@@ -44,14 +44,14 @@ describe('buildHistoricalPlan', () => {
     expect(plan.map(y => y.inflation)).toEqual([0.1, 2.7]);
   });
 
-  it('przedłuża wpłatę ostatniego okresu, gdy okresy są krótsze', () => {
+  it('extends the last period\'s contribution when periods are shorter', () => {
     const plan = buildHistoricalPlan(periods, {
       returns: sp500.returns, inflation: sp500.inflation, firstYear: 2000, years: 8,
     });
     expect(plan.map(y => y.contribution)).toEqual([500, 500, 500, 2000, 2000, 2000, 2000, 2000]);
   });
 
-  it('ucina okresy dłuższe niż wybrany zakres', () => {
+  it('truncates periods longer than the selected window', () => {
     const plan = buildHistoricalPlan(periods, {
       returns: sp500.returns, inflation: sp500.inflation, firstYear: 2000, years: 2,
     });
@@ -59,12 +59,12 @@ describe('buildHistoricalPlan', () => {
   });
 });
 
-describe('nadpisania', () => {
-  it('pruneOverrides usuwa lata spoza zakresu', () => {
+describe('overrides', () => {
+  it('pruneOverrides drops years out of range', () => {
     expect(pruneOverrides({ 0: 1, 4: 2, 7: 3 }, 5)).toEqual({ 0: 1, 4: 2 });
   });
 
-  it('randomOverrides losuje w zakresie ±spread', () => {
+  it('randomOverrides stays within ±spread', () => {
     const plan = buildOwnPlan(periods, {}, 0);
     expect(randomOverrides(plan, 15, () => 0)).toEqual({ 0: -8, 1: -8, 2: -8, 3: -10, 4: -10 });
     expect(randomOverrides(plan, 15, () => 1)).toEqual({ 0: 22, 1: 22, 2: 22, 3: 20, 4: 20 });

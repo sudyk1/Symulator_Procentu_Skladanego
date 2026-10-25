@@ -8,7 +8,7 @@ export function totalYears(periods: Period[]): number {
   return periods.reduce((sum, period) => sum + period.years, 0);
 }
 
-/** Zakresy lat okresów, numerowane od 1, np. [[1, 10], [11, 15]]. */
+/** Year ranges of the periods, numbered from 1, e.g. [[1, 10], [11, 15]]. */
 export function periodRanges(periods: Period[]): [number, number][] {
   let from = 1;
   return periods.map(period => {
@@ -18,7 +18,7 @@ export function periodRanges(periods: Period[]): [number, number][] {
   });
 }
 
-/** Indeks okresu dla roku (od 0). Lata po końcu okresów należą do ostatniego okresu. */
+/** Period index for a year (from 0). Years past the last period belong to the last period. */
 export function periodIndexForYear(periods: Period[], yearIndex: number): number {
   let end = 0;
   for (let i = 0; i < periods.length; i++) {
@@ -28,7 +28,7 @@ export function periodIndexForYear(periods: Period[], yearIndex: number): number
   return periods.length - 1;
 }
 
-/** Tryb własny: każdy rok bierze wpłatę i zwrot ze swojego okresu, chyba że zwrot nadpisano. */
+/** Own mode: each year takes the contribution and return of its period, unless the return is overridden. */
 export function buildOwnPlan(periods: Period[], overrides: RateOverrides, inflation: number): YearPlan[] {
   const plan: YearPlan[] = [];
   periods.forEach((period, periodIndex) => {
@@ -55,8 +55,8 @@ export interface HistoricalWindow {
 }
 
 /**
- * Tryb historyczny: zwrot i inflacja pochodzą z danych, okresy wyznaczają tylko wpłaty.
- * Liczba lat wynika z wybranego zakresu, nie z sumy okresów.
+ * Historical mode: returns and inflation come from the data, periods only set the contributions.
+ * The number of years follows the selected window, not the sum of the periods.
  */
 export function buildHistoricalPlan(periods: Period[], window: HistoricalWindow): YearPlan[] {
   return Array.from({ length: window.years }, (_, yearIndex) => {
@@ -73,12 +73,12 @@ export function buildHistoricalPlan(periods: Period[], window: HistoricalWindow)
   });
 }
 
-/** Usuwa nadpisania lat, które wypadły poza zakres po skróceniu okresów. */
+/** Drops overrides of years that fell outside the range after the periods were shortened. */
 export function pruneOverrides(overrides: RateOverrides, years: number): RateOverrides {
   return Object.fromEntries(Object.entries(overrides).filter(([year]) => Number(year) < years));
 }
 
-/** Losuje zwrot każdego roku w zakresie ±spread punktów procentowych od zwrotu okresu. */
+/** Randomises each year's return within ±spread percentage points of its period's return. */
 export function randomOverrides(plan: YearPlan[], spread: number, random = Math.random): RateOverrides {
   return Object.fromEntries(plan.map((year, i) => {
     const rate = year.rate + (random() * 2 - 1) * spread;

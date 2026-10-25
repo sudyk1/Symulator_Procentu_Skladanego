@@ -9,6 +9,7 @@
   --loss: #dc2626;
   --warn: #fef3c7;
   --real: #d97706;
+  --compare: #7c3aed;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,6 +24,7 @@
     --loss: #f87171;
     --warn: #3b3214;
     --real: #fbbf24;
+    --compare: #a78bfa;
   }
 }
 
@@ -39,6 +41,30 @@ main { max-width: 1040px; margin: 0 auto; padding: 24px 16px 48px; }
 h1 { font-size: 1.5rem; margin: 0 0 4px; }
 h2 { font-size: 1rem; margin: 0 0 4px; }
 .subtitle { color: var(--muted); margin: 0 0 20px; }
+
+.page-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+
+.language-switcher { display: flex; gap: 6px; flex-shrink: 0; }
+.language-switcher button {
+  display: flex;
+  padding: 4px;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  background: transparent;
+  opacity: .55;
+}
+.language-switcher button.on { border-color: var(--accent); opacity: 1; }
+.language-switcher button:hover { opacity: 1; }
+.language-switcher svg { width: 28px; height: 19px; display: block; border-radius: 2px; box-shadow: 0 0 0 1px var(--border); }
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .hint { color: var(--muted); font-size: .85rem; margin: 0 0 12px; }
 .hint.spaced { margin: 12px 0 16px; }
 
@@ -52,7 +78,7 @@ h2 { font-size: 1rem; margin: 0 0 4px; }
 
 .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; }
 
-/* --- Formularze --- */
+/* --- Forms --- */
 
 label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--muted); }
 
@@ -92,7 +118,7 @@ button:disabled { opacity: .35; cursor: default; }
 .segmented button { border: 0; border-radius: 0; background: transparent; color: var(--muted); }
 .segmented button.on { background: var(--accent); color: #fff; }
 
-/* --- Podsumowanie --- */
+/* --- Summary --- */
 
 .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
 .stat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
@@ -103,11 +129,16 @@ button:disabled { opacity: .35; cursor: default; }
 .gain { color: var(--gain); }
 .loss { color: var(--loss); }
 
-/* --- Wykres --- */
+/* --- Chart --- */
 
 .chart { width: 100%; height: 300px; }
 
-/* --- Tabele --- */
+/* --- Comparison --- */
+
+.comparison { border-color: var(--compare); }
+.comparison td:first-child { color: var(--muted); }
+
+/* --- Tables --- */
 
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .9rem; font-variant-numeric: tabular-nums; }

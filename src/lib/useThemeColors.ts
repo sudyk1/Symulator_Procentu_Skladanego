@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 
-const NAMES = ['accent', 'muted', 'border', 'real', 'card', 'text'] as const;
+const NAMES = ['accent', 'muted', 'border', 'real', 'compare', 'card', 'text'] as const;
 export type ThemeColors = Record<(typeof NAMES)[number], string>;
 
 function readColors(): ThemeColors {
@@ -9,8 +9,8 @@ function readColors(): ThemeColors {
 }
 
 /**
- * Kolory z CSS (zmienne --accent itd.) dla bibliotek, które potrzebują ich jako wartości,
- * np. wykresu SVG. Odświeża się po przełączeniu jasnego/ciemnego motywu.
+ * CSS colours (the --accent etc. variables) as plain values for libraries that need them,
+ * e.g. the SVG chart. Refreshes when the light/dark theme changes.
  */
 export function useThemeColors(): ThemeColors {
   const [colors, setColors] = useState(readColors);
