@@ -1,7 +1,14 @@
+import type { Currency } from '../data/currencies';
+
+const CURRENCY_SYMBOLS: Record<Currency, string> = { PLN: 'zł', EUR: '€', USD: '$', GBP: '£' };
+
+/** Short symbol for labels, e.g. "zł" or "€". */
+export const currencySymbol = (currency: Currency) => CURRENCY_SYMBOLS[currency];
+
 export interface Formatters {
-  /** Amount in PLN without decimals, e.g. "293 900 zł" or "PLN 293,900". */
+  /** Amount without decimals in the selected currency, e.g. "293 900 zł" or "€293,900". */
   currency: (amount: number) => string;
-  /** Short amount for chart axes, e.g. "320 tys." or "320K". */
+  /** Short number for chart axes, e.g. "320 tys." or "320K". */
   compact: (amount: number) => string;
   /** Signed percentage, e.g. "+7.00%". The argument is in percent, not a fraction. */
   percent: (percent: number) => string;
@@ -11,8 +18,10 @@ export interface Formatters {
   decimal: (value: number) => string;
 }
 
-export function createFormatters(locale: string): Formatters {
-  const currency = new Intl.NumberFormat(locale, { style: 'currency', currency: 'PLN', maximumFractionDigits: 0 });
+export function createFormatters(locale: string, currencyCode: Currency): Formatters {
+  const currency = new Intl.NumberFormat(locale, {
+    style: 'currency', currency: currencyCode, maximumFractionDigits: 0,
+  });
   const compact = new Intl.NumberFormat(locale, { notation: 'compact', maximumFractionDigits: 1 });
   const signed = new Intl.NumberFormat(locale, {
     minimumFractionDigits: 2, maximumFractionDigits: 2, signDisplay: 'always',

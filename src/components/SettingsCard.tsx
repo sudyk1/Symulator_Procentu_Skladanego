@@ -1,5 +1,7 @@
+import { CURRENCIES, type Currency } from '../data/currencies';
 import type { ContributionFrequency } from '../domain/types';
 import { useI18n } from '../i18n/I18nProvider';
+import { currencySymbol } from '../lib/format';
 import { NumberInput } from './NumberInput';
 
 interface Props {
@@ -10,12 +12,18 @@ interface Props {
 }
 
 export function SettingsCard({ initialAmount, frequency, onInitialAmountChange, onFrequencyChange }: Props) {
-  const { t } = useI18n();
+  const { t, currency, setCurrency } = useI18n();
   return (
     <section className="card">
       <div className="grid">
         <label>
-          {t.settings.initialAmount}
+          {t.settings.currency}
+          <select value={currency} onChange={e => setCurrency(e.target.value as Currency)}>
+            {CURRENCIES.map(({ code }) => <option key={code} value={code}>{t.currencies[code]}</option>)}
+          </select>
+        </label>
+        <label>
+          {t.settings.initialAmount(currencySymbol(currency))}
           <NumberInput min={0} step={100} value={initialAmount} onChange={onInitialAmountChange} />
         </label>
         <label>

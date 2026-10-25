@@ -10,6 +10,7 @@
   --warn: #fef3c7;
   --real: #d97706;
   --compare: #7c3aed;
+  --accent-soft: #e8efff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -25,6 +26,7 @@
     --warn: #3b3214;
     --real: #fbbf24;
     --compare: #a78bfa;
+    --accent-soft: #1b2a45;
   }
 }
 
@@ -118,13 +120,51 @@ button:disabled { opacity: .35; cursor: default; }
 .segmented button { border: 0; border-radius: 0; background: transparent; color: var(--muted); }
 .segmented button.on { background: var(--accent); color: #fff; }
 
-/* --- Summary --- */
+/* --- Result --- */
 
-.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; }
-.stat { background: var(--card); border: 1px solid var(--border); border-radius: 10px; padding: 14px; }
-.stat.real { border-color: var(--real); }
-.stat-label { font-size: .8rem; color: var(--muted); }
-.stat-value { font-size: 1.35rem; font-weight: 600; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.result { border: 2px solid var(--accent); }
+.result h2 { margin-bottom: 12px; }
+
+/* Three key figures: paid in, final value, profit */
+.result-main { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.key-figure { padding: 14px 16px; border-radius: 8px; background: var(--bg); }
+.key-figure.emphasis { background: var(--accent-soft); }
+.key-figure-label { font-size: .9rem; font-weight: 600; color: var(--muted); }
+.key-figure-value {
+  font-size: clamp(1.6rem, 4vw, 2.1rem);
+  font-weight: 700;
+  margin: 4px 0 2px;
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+.key-figure-note { font-size: .8rem; color: var(--muted); }
+
+/* Secondary figures in a compact row */
+.result-secondary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px 16px;
+  margin: 16px 0 8px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+.result-secondary div { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; }
+.result-secondary div.real dt::before {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+  background: var(--real);
+}
+.result-secondary dt { font-size: .85rem; color: var(--muted); }
+.result-secondary dd { margin: 0; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+
+/* Phones and narrow windows: one figure per row */
+@media (max-width: 720px) {
+  .result-main, .result-secondary { grid-template-columns: 1fr; }
+}
 
 .gain { color: var(--gain); }
 .loss { color: var(--loss); }

@@ -3,79 +3,83 @@ import { ComparisonCard } from './components/ComparisonCard';
 import { GrowthChart } from './components/GrowthChart';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { PeriodsCard } from './components/PeriodsCard';
-import { ReturnsCard, type HistoricalChoice } from './components/ReturnsCard';
+import { ReturnsCard, type AssetOption, type HistoricalChoice } from './components/ReturnsCard';
 import { SettingsCard } from './components/SettingsCard';
 import { StatsBar } from './components/StatsBar';
 import { YearlyTable } from './components/YearlyTable';
-import { findAsset, MARKET_ASSETS, type MarketAsset } from './data/assets';
-import { availableLengths, availableStartYears, coversWindow } from './domain/historical';
+import { MARKET_ASSETS } from './data/assets';
+import { marketDataFor, type MarketData } from './domain/currency';
+import { availableStartYears, coversWindow, fitWindow } from './domain/historical';
 import {
   buildHistoricalPlan, buildOwnPlan, pruneOverrides, randomOverrides, totalYears,
 } from './domain/plan';
 import { simulate, summarize } from './domain/simulate';
 import type { ContributionFrequency, Period, RateOverrides, ReturnsMode } from './domain/types';
 import { useI18n } from './i18n/I18nProvider';
+import { currencySymbol } from './lib/format';
 
 const RANDOM_SPREAD = 15;
 const DEFAULT_HISTORICAL_YEARS = 20;
+const DEFAULT_ASSET_ID = 'sp500';
 
 let nextPeriodId = 1;
 const newPeriod = (fields: Omit<Period, 'id'>): Period => ({ id: nextPeriodId++, ...fields });
 
-function defaultHistoricalChoice(): HistoricalChoice {
-  const asset = findAsset('sp500');
-  const lengths = availableLengths(asset);
-  const years = lengths.includes(DEFAULT_HISTORICAL_YEARS) ? DEFAULT_HISTORICAL_YEARS : lengths[0];
-  return { assetId: asset.returns.id, years, firstYear: availableStartYears(asset, years)[0] };
-}
-
-const historicalPlan = (periods: Period[], asset: MarketAsset, choice: HistoricalChoice) =>
-  buildHistoricalPlan(periods, {
-    returns: asset.returns,
-    inflation: asset.inflation,
-    firstYear: choice.firstYear,
-    years: choice.years,
-  });
+const historicalPlan = (periods: Period[], data: MarketData, window: { years: number; firstYear: number }) =>
+  buildHistoricalPlan(periods, { ...data, ...window });
 
 export function App() {
-  const { t } = useI18n();
+  const { t, currency } = useI18n();
   const [initialAmount, setInitialAmount] = useState(10000);
   const [frequency, setFrequency] = useState<ContributionFrequency>('month');
   const [mode, setMode] = useState<ReturnsMode>('own');
   const [ownInflation, setOwnInflation] = useState(3.5);
-  const [historical, setHistorical] = useState(defaultHistoricalChoice);
+  const [historicalChoice, setHistoricalChoice] = useState<HistoricalChoice | null>(null);
   const [periods, setPeriods] = useState(() => [newPeriod({ years: 20, contribution: 500, rate: 7 })]);
   const [overrides, setOverrides] = useState<RateOverrides>({});
   const [compareId, setCompareId] = useState<string | null>(null);
 
-  const asset = findAsset(historical.assetId);
+  // Every asset with its returns converted into the selected currency
+  const options: AssetOption[] = useMemo(
+    () => MARKET_ASSETS.map(asset => ({ asset, data: marketDataFor(asset, currency) })),
+    [currency],
+  );
+
+  // The stored choice may not fit the data after a currency change (e.g. 40 years in USD, 31 in PLN)
+  const historical = useMemo((): HistoricalChoice => {
+    const assetId = historicalChoice?.assetId ?? DEFAULT_ASSET_ID;
+    const { data } = options.find(option => option.asset.returns.id === assetId)!;
+    const firstYear = historicalChoice?.firstYear ?? availableStartYears(data, DEFAULT_HISTORICAL_YEARS)[0];
+    return { assetId, ...fitWindow(data, historicalChoice?.years ?? DEFAULT_HISTORICAL_YEARS, firstYear) };
+  }, [historicalChoice, options]);
+  const selected = options.find(option => option.asset.returns.id === historical.assetId)!;
 
   const plan = useMemo(() => mode === 'own'
     ? buildOwnPlan(periods, overrides, ownInflation)
-    : historicalPlan(periods, asset, historical),
-  [mode, periods, overrides, ownInflation, asset, historical]);
+    : historicalPlan(periods, selected.data, historical),
+  [mode, periods, overrides, ownInflation, selected, historical]);
 
   const results = useMemo(() => simulate(plan, { initialAmount, frequency }), [plan, initialAmount, frequency]);
   const summary = summarize(plan, results, initialAmount);
 
   // Comparison: only assets with data for the whole selected range of years
-  const compareCandidates = MARKET_ASSETS.filter(candidate =>
-    candidate !== asset && coversWindow(candidate, historical.firstYear, historical.years));
-  const compareAsset = mode === 'historical'
-    ? compareCandidates.find(candidate => candidate.returns.id === compareId)
+  const compareCandidates = options.filter(option =>
+    option !== selected && coversWindow(option.data, historical.firstYear, historical.years));
+  const compareOption = mode === 'historical'
+    ? compareCandidates.find(option => option.asset.returns.id === compareId)
     : undefined;
   const comparison = useMemo(() => {
-    if (!compareAsset) return undefined;
-    const comparePlan = historicalPlan(periods, compareAsset, historical);
+    if (!compareOption) return undefined;
+    const comparePlan = historicalPlan(periods, compareOption.data, historical);
     const compareResults = simulate(comparePlan, { initialAmount, frequency });
     return {
-      id: compareAsset.returns.id,
+      id: compareOption.asset.returns.id,
       results: compareResults,
       summary: summarize(comparePlan, compareResults, initialAmount),
     };
-  }, [compareAsset, periods, historical, initialAmount, frequency]);
+  }, [compareOption, periods, historical, initialAmount, frequency]);
 
-  const contributionLabel = t.contribution[frequency];
+  const contributionLabel = t.contribution[frequency](currencySymbol(currency));
 
   // Changing periods may shorten the simulation – overrides of years out of range are dropped
   const updatePeriods = (next: Period[]) => {
@@ -112,13 +116,14 @@ export function App() {
         mode={mode}
         ownInflation={ownInflation}
         historical={historical}
-        asset={asset}
+        options={options}
+        selected={selected}
         compareCandidates={compareCandidates}
-        compareId={compareAsset ? compareId : null}
+        compareId={compareOption ? compareId : null}
         periodYears={totalYears(periods)}
         onModeChange={setMode}
         onOwnInflationChange={setOwnInflation}
-        onHistoricalChange={setHistorical}
+        onHistoricalChange={setHistoricalChoice}
         onCompareChange={setCompareId}
       />
 
@@ -137,11 +142,11 @@ export function App() {
         onClearOverrides={() => setOverrides({})}
       />
 
-      <StatsBar summary={summary} />
+      <StatsBar summary={summary} years={plan.length} />
 
       {comparison && (
         <ComparisonCard
-          mainName={t.series[asset.returns.id]}
+          mainName={t.series[selected.asset.returns.id]}
           compareName={t.series[comparison.id]}
           main={summary}
           compare={comparison.summary}

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { findAsset } from '../data/assets';
+import { marketDataFor } from './currency';
 import {
   buildHistoricalPlan, buildOwnPlan, periodIndexForYear, periodRanges, pruneOverrides, randomOverrides,
 } from './plan';
@@ -33,11 +34,11 @@ describe('buildOwnPlan', () => {
 });
 
 describe('buildHistoricalPlan', () => {
-  const sp500 = findAsset('sp500');
+  const sp500 = marketDataFor(findAsset('sp500'), 'USD');
 
   it('takes returns and inflation from the data for consecutive calendar years', () => {
     const plan = buildHistoricalPlan(periods, {
-      returns: sp500.returns, inflation: sp500.inflation, firstYear: 2008, years: 2,
+      ...sp500, firstYear: 2008, years: 2,
     });
     expect(plan.map(y => y.calendarYear)).toEqual([2008, 2009]);
     expect(plan.map(y => y.rate)).toEqual([-37.0, 26.46]);
@@ -46,14 +47,14 @@ describe('buildHistoricalPlan', () => {
 
   it('extends the last period\'s contribution when periods are shorter', () => {
     const plan = buildHistoricalPlan(periods, {
-      returns: sp500.returns, inflation: sp500.inflation, firstYear: 2000, years: 8,
+      ...sp500, firstYear: 2000, years: 8,
     });
     expect(plan.map(y => y.contribution)).toEqual([500, 500, 500, 2000, 2000, 2000, 2000, 2000]);
   });
 
   it('truncates periods longer than the selected window', () => {
     const plan = buildHistoricalPlan(periods, {
-      returns: sp500.returns, inflation: sp500.inflation, firstYear: 2000, years: 2,
+      ...sp500, firstYear: 2000, years: 2,
     });
     expect(plan).toHaveLength(2);
   });
