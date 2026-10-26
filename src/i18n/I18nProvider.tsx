@@ -50,6 +50,7 @@ export function I18nProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     document.documentElement.lang = language;
     document.title = MESSAGES[language].appTitle;
+    document.querySelector('meta[name="description"]')?.setAttribute('content', MESSAGES[language].appDescription);
     store(LANGUAGE_KEY, language);
   }, [language]);
 

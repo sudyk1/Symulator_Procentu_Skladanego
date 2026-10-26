@@ -50,6 +50,7 @@ export function YearlyTable({ plan, results, mode, contributionLabel, onRateChan
                   <td>
                     {editable ? (
                       <NumberInput
+                        aria-label={t.yearly.rateOf(i + 1)}
                         step={0.1} value={year.rate} className={year.overridden ? 'override' : undefined}
                         onChange={rate => onRateChange(i, rate)}
                       />

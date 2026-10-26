@@ -43,18 +43,21 @@ export function PeriodsCard({
                 <td>{ranges[i][0]}–{ranges[i][1]}</td>
                 <td>
                   <NumberInput
+                    aria-label={t.periods.yearCountOf(i + 1)}
                     min={1} max={MAX_YEARS} step={1} value={period.years}
                     onChange={years => onChange(period.id, { years: clampYears(years) })}
                   />
                 </td>
                 <td>
                   <NumberInput
+                    aria-label={t.periods.contributionOf(i + 1)}
                     min={0} step={50} value={period.contribution}
                     onChange={contribution => onChange(period.id, { contribution })}
                   />
                 </td>
                 <td>
                   <NumberInput
+                    aria-label={t.periods.rateOf(i + 1)}
                     step={0.1} value={period.rate} disabled={historical}
                     title={historical ? t.periods.rateFromData : undefined}
                     onChange={rate => onChange(period.id, { rate })}

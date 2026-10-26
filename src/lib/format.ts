@@ -16,6 +16,8 @@ export interface Formatters {
   points: (points: number) => string;
   /** Plain number with one decimal place, e.g. "-37.0". */
   decimal: (value: number) => string;
+  /** Growth multiple, e.g. "×7.7". */
+  multiple: (value: number) => string;
 }
 
 export function createFormatters(locale: string, currencyCode: Currency): Formatters {
@@ -34,6 +36,7 @@ export function createFormatters(locale: string, currencyCode: Currency): Format
     percent: percent => `${signed.format(percent)}%`,
     points: points => `${signed.format(points)} pp`,
     decimal: value => decimal.format(value),
+    multiple: value => `×${decimal.format(value)}`,
   };
 }
 

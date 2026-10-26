@@ -2,15 +2,18 @@
   --bg: #f6f7f9;
   --card: #fff;
   --text: #1d2330;
-  --muted: #6b7280;
+  --muted: #4b5563;
   --border: #e2e5ea;
   --accent: #2563eb;
-  --gain: #16a34a;
-  --loss: #dc2626;
+  --gain: #15803d;
+  --loss: #b91c1c;
   --warn: #fef3c7;
   --real: #d97706;
   --compare: #7c3aed;
   --accent-soft: #e8efff;
+  /* Filled buttons: white text needs at least 4.5:1 contrast (WCAG AA), so they use a darker blue */
+  --button-bg: #2563eb;
+  --button-text: #fff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -99,9 +102,9 @@ button {
   font: inherit;
   padding: 8px 14px;
   border-radius: 6px;
-  border: 1px solid var(--accent);
-  background: var(--accent);
-  color: #fff;
+  border: 1px solid var(--button-bg);
+  background: var(--button-bg);
+  color: var(--button-text);
   cursor: pointer;
 }
 button.ghost { background: transparent; color: var(--accent); }
@@ -118,7 +121,7 @@ button:disabled { opacity: .35; cursor: default; }
   margin-bottom: 12px;
 }
 .segmented button { border: 0; border-radius: 0; background: transparent; color: var(--muted); }
-.segmented button.on { background: var(--accent); color: #fff; }
+.segmented button.on { background: var(--button-bg); color: var(--button-text); }
 
 /* --- Result --- */
 
@@ -172,6 +175,25 @@ button:disabled { opacity: .35; cursor: default; }
 /* --- Chart --- */
 
 .chart { width: 100%; height: 300px; }
+
+.card-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.checkbox { flex-direction: row; align-items: center; gap: 6px; white-space: nowrap; }
+.checkbox input { width: auto; }
+
+/* Key facts under the price chart */
+.price-facts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px 16px;
+  margin: 12px 0 8px;
+}
+.price-facts dt { font-size: .8rem; color: var(--muted); }
+.price-facts dd { margin: 2px 0 0; font-weight: 600; font-variant-numeric: tabular-nums; }
+.price-facts dd span { font-weight: 400; color: var(--muted); font-size: .85rem; }
+
+@media (max-width: 720px) {
+  .price-facts { grid-template-columns: repeat(2, 1fr); }
+}
 
 /* --- Comparison --- */
 
