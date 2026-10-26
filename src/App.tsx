@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { AssetPriceChart } from './components/AssetPriceChart';
 import { ComparisonCard } from './components/ComparisonCard';
 import { GrowthChart } from './components/GrowthChart';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
@@ -74,6 +75,7 @@ export function App() {
     const compareResults = simulate(comparePlan, { initialAmount, frequency });
     return {
       id: compareOption.asset.returns.id,
+      plan: comparePlan,
       results: compareResults,
       summary: summarize(comparePlan, compareResults, initialAmount),
     };
@@ -150,6 +152,14 @@ export function App() {
           compareName={t.series[comparison.id]}
           main={summary}
           compare={comparison.summary}
+        />
+      )}
+
+      {mode === 'historical' && (
+        <AssetPriceChart
+          name={t.series[selected.asset.returns.id]}
+          plan={plan}
+          comparison={comparison && { name: t.series[comparison.id], plan: comparison.plan }}
         />
       )}
 

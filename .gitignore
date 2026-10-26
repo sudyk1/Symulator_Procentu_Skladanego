@@ -28,7 +28,7 @@ npm-debug.log*
 Thumbs.db
 Desktop.ini
 
-# Claude Code: shared project settings (.claude/settings.json) stay in the repo,
-# local settings and the preview config depend on the machine
-.claude/settings.local.json
-.claude/launch.json
+# Claude Code: shared project settings (.claude/settings.json) stay in the repo;
+# local settings, the preview config and saved reports (e.g. Lighthouse JSON) do not
+.claude/*.json
+!.claude/settings.json
