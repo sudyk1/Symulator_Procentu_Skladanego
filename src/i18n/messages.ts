@@ -13,6 +13,8 @@ const enYears = (n: number) => `${n} ${n === 1 ? 'year' : 'years'}`;
 const en = {
   appTitle: 'ETF Investment Simulator',
   appSubtitle: 'Compound interest with regular contributions. Monthly compounding.',
+  appDescription: 'Free compound interest and ETF investment calculator: regular contributions, '
+    + 'historical returns of the S&P 500, MSCI World and WIG, inflation-adjusted results in PLN, EUR, USD or GBP.',
   languageSwitcher: 'Language',
 
   settings: {
@@ -74,6 +76,10 @@ const en = {
     add: '+ Add period',
     randomize: (spread: number) => `Random years (±${spread}% volatility)`,
     clearOverrides: 'Clear single-year changes',
+    // Accessible names of the table inputs, read out by screen readers
+    yearCountOf: (period: number) => `Period ${period}: number of years`,
+    contributionOf: (period: number) => `Period ${period}: contribution`,
+    rateOf: (period: number) => `Period ${period}: annual return (%)`,
   },
 
   stats: {
@@ -100,6 +106,19 @@ const en = {
     averageReturn: 'Average annual return',
   },
 
+  priceChart: {
+    title: (name: string) => `Price: ${name}`,
+    subtitle: (start: number, currency: string) =>
+      `Value of ${start} ${currency} invested once at the start, with dividends reinvested, in ${currency}.`,
+    logScale: 'Logarithmic scale',
+    growth: 'Total growth',
+    bestYear: 'Best year',
+    worstYear: 'Worst year',
+    maxDrawdown: 'Largest fall from a peak',
+    annualNote: 'Based on annual returns: falls within a year (e.g. March 2020) are not visible. '
+      + 'The shaded area marks the largest fall.',
+  },
+
   chart: {
     value: 'Portfolio value',
     paid: 'Contributed capital',
@@ -119,6 +138,7 @@ const en = {
     totalPaid: 'Total paid',
     value: 'Value at year end',
     realValue: 'After inflation',
+    rateOf: (year: number) => `Year ${year}: return (%)`,
   },
 
   /** Display names of market data series, by series id. */
@@ -152,6 +172,8 @@ function plYears(n: number): string {
 const pl: Messages = {
   appTitle: 'Symulator inwestycji ETF',
   appSubtitle: 'Procent składany z regularnymi wpłatami. Kapitalizacja miesięczna.',
+  appDescription: 'Darmowy kalkulator procentu składanego i inwestycji w ETF: regularne wpłaty, '
+    + 'historyczne zwroty S&P 500, MSCI World i WIG, wynik po inflacji w PLN, EUR, USD lub GBP.',
   languageSwitcher: 'Język',
 
   settings: {
@@ -212,6 +234,9 @@ const pl: Messages = {
     add: '+ Dodaj okres',
     randomize: spread => `Losowe lata (zmienność ±${spread}%)`,
     clearOverrides: 'Wyczyść zmiany pojedynczych lat',
+    yearCountOf: period => `Okres ${period}: liczba lat`,
+    contributionOf: period => `Okres ${period}: wpłata`,
+    rateOf: period => `Okres ${period}: zwrot roczny (%)`,
   },
 
   stats: {
@@ -238,6 +263,19 @@ const pl: Messages = {
     averageReturn: 'Średni zwrot roczny',
   },
 
+  priceChart: {
+    title: name => `Kurs: ${name}`,
+    subtitle: (start, currency) =>
+      `Wartość ${start} ${currency} zainwestowanych jednorazowo na starcie, z reinwestycją dywidend, w ${currency}.`,
+    logScale: 'Skala logarytmiczna',
+    growth: 'Łączny wzrost',
+    bestYear: 'Najlepszy rok',
+    worstYear: 'Najgorszy rok',
+    maxDrawdown: 'Największy spadek od szczytu',
+    annualNote: 'Na podstawie rocznych zwrotów: spadki w trakcie roku (np. marzec 2020) nie są widoczne. '
+      + 'Zacieniony obszar to największy spadek.',
+  },
+
   chart: {
     value: 'Wartość portfela',
     paid: 'Wpłacony kapitał',
@@ -257,6 +295,7 @@ const pl: Messages = {
     totalPaid: 'Suma wpłat',
     value: 'Wartość na koniec',
     realValue: 'Po inflacji',
+    rateOf: year => `Rok ${year}: zwrot (%)`,
   },
 
   series: {
